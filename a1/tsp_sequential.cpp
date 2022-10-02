@@ -10,12 +10,16 @@
 #include <limits.h>
 #include <assert.h>
 #include <chrono>
+#include <pthread>
 
 
 const int MAXCITIES = 20;
 
 
 int **Dist;			// Dist[i][j] =  distance from  i to j
+
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
 
 class Path 
 {
@@ -74,6 +78,8 @@ class Queue
   int isEmpty() { return size==0; };
 };
 
+///////////////////////////////////////////////////////////////////////////
+
 void Queue::Put(Path *P) 
 { 
   assert(size < MAXQSIZE); 
@@ -94,9 +100,9 @@ Path *Queue::Get()
 
 ///////////////////////////////////////////////////////////////////////////
 
-
 void Fill_Dist(int numCities)
 {
+  // create Distance Matrix, Fill with random distances, symmetrical.
   std::cout << "Distance matrix:\n";
   Dist = new int*[numCities];
   for (int i=0; i<numCities; i++) {
@@ -104,18 +110,16 @@ void Fill_Dist(int numCities)
     for (int j=0; j<numCities; j++) {
       // Not necessary, but let's make Dist simmetric:
       if (i==j) 
-	Dist[i][j] = 0;
+	      Dist[i][j] = 0;
       else if (j<i) 
-	Dist[i][j] = Dist[j][i];
+	      Dist[i][j] = Dist[j][i];
       else
-	Dist[i][j] = rand()%1000; 
+	      Dist[i][j] = rand()%1000; 
       std::cout << Dist[i][j] << '\t';
     }
     std::cout << std::endl << std::endl;
   }
 }
-
-
 
 struct Params
 {
