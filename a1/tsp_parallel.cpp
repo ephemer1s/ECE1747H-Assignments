@@ -159,7 +159,7 @@ void* tsp (void* arg)
 
 	      // update shortestPath, if p1 is better
 	      if (p1->length < shortestPath->length) 
-          std::lock_guard<std::mutex> guard(mutex_shortest)
+          std::lock_guard<std::mutex> guard(mutex_shortest);
           *shortestPath = *p1;
 	     
 	      delete p1;
