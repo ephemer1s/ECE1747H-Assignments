@@ -14,16 +14,16 @@
 #include <limits.h>
 #include <assert.h>
 #include <chrono>
+#include <thread>
+#include <mutex>
+#include <cstdlib>
 #include <pthread.h>
 #include <vector>
-#include <mutex>
-#include <thread>
-#include <cstdlib>
 #include <algorithm>
 // using namespace std;
 
 const int MAX_CITIES = 20;
-const int MAX_THREADS = 8;
+const int MAX_THREADS = 4;
 std::mutex mutex_shortest;
 int **Dist;			// Dist[i][j] =  distance from  i to j
 
