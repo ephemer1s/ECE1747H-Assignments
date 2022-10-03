@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
   std::cout << "Shortest path:";
   Shortest.Print();
   
-  std::cout << "TSP solution took " << ms.count() << " ms\n";
+  std::cout << "TSP parallel solution took " << ms.count() << " ms\n";
   return 0;
 }
 
