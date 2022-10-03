@@ -210,12 +210,10 @@ int main(int argc, char *argv[])
   /*======================== allocate threads ==-=====================*/
   for (int i = 0; i < num_threads; i++) {
     Path *P = new Path(num_cities);
-    P -> AddCity(i)
-    queues[i].Put(P)
-  }
-
-  shortest.length = INT_MAX;
-  params[i] = {num_cities, &queues[i], &shortest}
+    P -> AddCity(i);
+    queues[i].Put(P);
+    shortest.length = INT_MAX;
+    params[i] = {num_cities, &queues[i], &shortest}
 
     /*====================== solve TSP in threads =====================*/
     int response = pthread_create(&threads[i], NULL, tsp, (void *)&params[i]);  // tsp(&params);
@@ -223,7 +221,7 @@ int main(int argc, char *argv[])
       cout << "Error:unable to create thread," << response << endl;
       exit(-1);
     } 
-  }   
+  }
   for (int i = 0; i < num_threads; i++) {
     pthread_join(threads[i], NULL);
   }
