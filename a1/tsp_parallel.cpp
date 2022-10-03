@@ -10,17 +10,18 @@
 #include <limits.h>
 #include <assert.h>
 #include <chrono>
-#include <pthread>
+#include <pthread.h>
 
+using namespace std;
 
-const int MAXCITIES = 20;
-const int NUM_THREADS = 10;
+const int MAX_CITIES = 20;
+const int MAX_THREADS = 20;
 
 int **Dist;			// Dist[i][j] =  distance from  i to j
 
-pthread_mutex_t queue = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t best = PTHREAD_MUTEX_INITIALIZER;
-pthread_t tid[NUM_THREADS];   // thread IDs
+// pthread_mutex_t queue = PTHREAD_MUTEX_INITIALIZER;
+// pthread_mutex_t best = PTHREAD_MUTEX_INITIALIZER;
+// pthread_t tid[NUM_THREADS];   // thread IDs
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -29,7 +30,7 @@ class Path
  public:
   int numVisited;	// Number of cities in the partial path
   int length;			// Current length of partial path
-  int city[MAXCITIES];
+  int city[MAX_CITIES];
   int numCities;
 
   // Array city[] is a permutation of all cities.
@@ -84,35 +85,18 @@ class Queue
 
 void Queue::Put(Path *P) 
 { 
-  pthreads_mutex_lock(&queue);
   assert(size < MAXQSIZE); 
   path[size++] = P;
-  pthreads_mutex_unlock(&queue);
 }
 
 Path *Queue::Get()
 {
-  pthreads_mutex_lock(&queue);
-  while( (q is empty) and (not done) ) {
-		waiting++;
-		if( waiting == p ) {
-			done = true;
-			pthreads_cond_broadcast(&empty, &queue);
-		}
-		else {
-			pthreads_cond_wait(&empty, &queue);
-			waiting--;
-		}
-	}
-  if (isEmpty()) {
+  if (isEmpty())
     return NULL;
-  }
-  else {
-    // to decrease the size of the queue, move the last element
-    Path *p = path[0]; 
-    path[0] = path[--size];
-    return p;
-  }
+  // to decrease the size of the queue, move the last element
+  Path *p = path[0]; 
+  path[0] = path[--size];
+  return p;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -173,6 +157,7 @@ void* tsp (void* arg)
 
 	      // update shortestPath, if p1 is better
 	      if (p1->length < shortestPath->length) 
+          lock_guard<mutex> guard(g_shortestPathMutex)
           *shortestPath = *p1;
 	     
 	      delete p1;
@@ -180,14 +165,9 @@ void* tsp (void* arg)
       else 
       {
         if (p1->length > shortestPath->length)
-        {
-          // This path is bad; just discard it
-          delete p1;
-        }
+          delete p1; // This path is bad; just discard it
         else
-        {
 	        Q->Put(p1);
-        }
       }
     } // end for
     delete p;			// p is not needed any more
@@ -195,16 +175,6 @@ void* tsp (void* arg)
   return NULL;
 }
 
-///////////////////////////////////////////////////////////////////////////
-
-void update_best(Path best) {
-	pthreads_mutex_lock(&best);
-	// do sth
-	pthreads_mutex_unlock(&best);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char *argv[])
 {
@@ -215,9 +185,12 @@ int main(int argc, char *argv[])
   }  
 
   int NumCities = atoi(argv[1]);
-  assert(NumCities <= MAXCITIES);
+  assert(NumCities <= MAX_CITIES);
   
   Fill_Dist(NumCities);			// initialize Distance matrix
+
+  /*====== create threads ======*/
+  int num_threads = min()
 
   Path *P = new Path(NumCities);
   Queue Q;
