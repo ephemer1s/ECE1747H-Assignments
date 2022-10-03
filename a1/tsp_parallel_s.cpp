@@ -21,7 +21,7 @@
 using namespace std;
 
 const int MAX_CITIES = 20;
-const int MAX_THREADS = 4;
+const int MAX_THREADS = MAX_CITIES;
 mutex mutex_shortest;
 int **Dist;			// Dist[i][j] =  distance from  i to j
 
@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
   Fill_Dist(num_cities);			// initialize Distance matrix
 
   /*===================== create thread containers ===================*/
-  int num_threads = min(MAX_THREADS, num_cities - 1);
+  int num_threads = num_cities;
   pthread_t threads[num_threads];
 
   vector<Queue> queues(num_threads);      // Queue Q;
@@ -209,21 +209,18 @@ int main(int argc, char *argv[])
 
   /*======================== allocate threads ==-=====================*/
   for (int i = 0; i < num_threads; i++) {
-    int loop_cnt = (num_cities - 1) / MAX_THREADS + ((((num_cities - 1) % MAX_THREADS) > i) ? 1 : 0);
-    for (int j = 0; j < loop_cnt; j++) { 
-      Path *P = new Path(num_cities);
-      P -> AddCity(i + j * MAX_THREADS + 1);
-      queues[i].Put(P);
-    }
+    Path *P = new Path(num_cities);
+    P -> AddCity(i)
+    queues[i].Put(P)
+  }
 
-    shortest.length = INT_MAX;
-    params[i] = {num_cities, &queues[i], &shortest};
-
+  shortest.length = INT_MAX;
+  params[i] = {num_cities, &queues[i], &shortest}
 
     /*====================== solve TSP in threads =====================*/
-    int rc = pthread_create(&threads[i], NULL, tsp, (void *)&params[i]);  // tsp(&params);
-    if (rc) {
-      cout << "Error:unable to create thread," << rc << endl;
+    int response = pthread_create(&threads[i], NULL, tsp, (void *)&params[i]);  // tsp(&params);
+    if (response) {
+      cout << "Error:unable to create thread," << response << endl;
       exit(-1);
     } 
   }   
