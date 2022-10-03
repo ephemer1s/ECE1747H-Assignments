@@ -21,7 +21,7 @@
 using namespace std;
 
 const int MAX_CITIES = 20;
-const int MAX_THREADS = 4;
+const int MAX_THREADS = 8;
 mutex mutex_shortest;
 int **Dist;			// Dist[i][j] =  distance from  i to j
 
@@ -221,9 +221,9 @@ int main(int argc, char *argv[])
 
 
     /*====================== solve TSP in threads =====================*/
-    int rc = pthread_create(&threads[i], NULL, tsp, (void *)&params[i]);  // tsp(&params);
-    if (rc) {
-      cout << "Error:unable to create thread," << rc << endl;
+    int response = pthread_create(&threads[i], NULL, tsp, (void *)&params[i]);  // tsp(&params);
+    if (response) {
+      cout << "Error:unable to create thread," << response << endl;
       exit(-1);
     } 
   }   
