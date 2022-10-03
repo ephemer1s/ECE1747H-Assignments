@@ -13,11 +13,11 @@
 #include <pthread.h>
 #include <vector>
 
-using namespace std;
+// using namespace std;
 
 const int MAX_CITIES = 20;
 const int MAX_THREADS = 20;
-mutex mutex_shortest;
+std::mutex mutex_shortest;
 int **Dist;			// Dist[i][j] =  distance from  i to j
 
 // pthread_mutex_t queue = PTHREAD_MUTEX_INITIALIZER;
@@ -54,7 +54,7 @@ class Path
     assert(numVisited <= i && i < numCities);
     // In order to keep the path as a permutation of all cities
     // we "add" a city on the path by swapping 
-    swap(city[i], city[numVisited]);
+    std::swap(city[i], city[numVisited]);
  
     // visit city[numVisited]
     length += Dist[city[numVisited-1]][city[numVisited]];
@@ -64,8 +64,8 @@ class Path
   void Print()
   {
     for (int i = 0; i < numVisited; i++) 
-	    cout << ' ' << city[i];
-    cout << "; length = " << length << endl;
+	    std::cout << ' ' << city[i];
+    std::cout << "; length = " << length << std::endl;
   }
 };
 
@@ -105,7 +105,7 @@ Path *Queue::Get()
 void Fill_Dist(int numCities)
 {
   // create Distance Matrix, Fill with random distances, symmetrical.
-  cout << "Distance matrix:\n";
+  std::cout << "Distance matrix:\n";
   Dist = new int*[numCities];
   for (int i=0; i<numCities; i++) {
     Dist[i] = new int[numCities];
@@ -117,9 +117,9 @@ void Fill_Dist(int numCities)
 	      Dist[i][j] = Dist[j][i];
       else
 	      Dist[i][j] = rand()%1000; 
-      cout << Dist[i][j] << '\t';
+      std::cout << Dist[i][j] << '\t';
     }
-    cout << endl << endl;
+    std::cout << std::endl << std::endl;
   }
 }
 
@@ -158,7 +158,7 @@ void* tsp (void* arg)
 
 	      // update shortestPath, if p1 is better
 	      if (p1->length < shortestPath->length) 
-          lock_guard<mutex> guard(g_shortestPathMutex)
+          std::lock_guard<std::mutex> guard(mutex_shortest)
           *shortestPath = *p1;
 	     
 	      delete p1;
@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
 {
   /*========= read args =========*/
   if (argc!=2) {
-    cout << "Usage: " << argv[0] << " num_cities\n";
+    std::cout << "Usage: " << argv[0] << " num_cities\n";
     exit(-1);
   }  
 
@@ -202,31 +202,27 @@ int main(int argc, char *argv[])
   // Shortest.length = INT_MAX;    // The initial Shortest path must be bad
   // Params params = {num_cities, &Q, &Shortest};
 
-  Path shortest(num_cities);
+  Path shortest = Path(num_cities);
 
-  vector<Queue> queues(num_threads);
-  vector<Params> params(num_threads);
+  std::vector<Queue> queues(num_threads);
+  std::vector<Params> params(num_threads);
 
 
-  auto startTime = chrono::steady_clock::now();
+  auto startTime = std::chrono::steady_clock::now();
   
   // tsp(&params);
   for (int i = 0; i < num_threads; i++) {
-    int loop_cnt = (num_cities - 1) / MAX_THREADS) + (((num_cities - 1) % MAX_THREADS) > i ? 1 : 0);
+    int loop_cnt = (num_cities - 1) / MAX_THREADS + ((num_cities - 1) % MAX_THREADS) > i ? 1 : 0;
     for (int j = 0; j < loop_cnt; j++) { 
       Path *P = new Path(num_cities);
       P -> AddCity(i + j * MAX_THREADS + 1);
       queues[i].Put(P);
     }
     shortest.length = INT_MAX;
-    params[i] = {
-      num_cities,
-      &queues[i],
-      &shortestPath
-    };
-    int rc = pthread_create(&threads[i], NULL, tsp, (void *)&params[i])
+    params[i] = {num_cities, &queues[i], &shortest};
+    int rc = pthread_create(&threads[i], NULL, tsp, (void *)&params[i]);
     if (rc) {
-      cout << "Error:unable to create thread," << rc << endl;
+      std::cout << "Error:unable to create thread," << rc << std::endl;
       exit(-1);
     } 
   }   
@@ -235,15 +231,15 @@ int main(int argc, char *argv[])
   }
   
   
-  auto endTime = chrono::steady_clock::now();
-  auto ms = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
+  auto endTime = std::chrono::steady_clock::now();
+  auto ms = std::chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
 
 
   /*====== print solution ======*/
-  cout << "Shortest path:";
-  Shortest.Print();
+  std::cout << "Shortest path:";
+  shortest.Print();
   
-  cout << "TSP parallel solution took " << ms.count() << " ms\n";
+  std::cout << "TSP parallel solution took " << ms.count() << " ms\n";
   return 0;
 }
 
