@@ -12,7 +12,7 @@
 #include <chrono>
 
 
-const int MAXCITIES = 20;
+const int MAX_CITIES = 20;
 
 
 int **Dist;			// Dist[i][j] =  distance from  i to j
@@ -22,7 +22,7 @@ class Path
  public:
   int numVisited;	// Number of cities in the partial path
   int length;			// Current length of partial path
-  int city[MAXCITIES];
+  int city[MAX_CITIES];
   int numCities;
 
   // Array city[] is a permutation of all cities.
@@ -183,7 +183,7 @@ int main(int argc, char *argv[])
   }  
 
   int NumCities = atoi(argv[1]);
-  assert(NumCities <= MAXCITIES);
+  assert(NumCities <= MAX_CITIES);
   
   Fill_Dist(NumCities);			// initialize Distance matrix
 
