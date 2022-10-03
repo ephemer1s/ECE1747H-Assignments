@@ -18,11 +18,11 @@
 #include <cstdlib>
 #include <pthread.h>
 #include <vector>
-// using namespace std;
+using namespace std;
 
 const int MAX_CITIES = 20;
 const int MAX_THREADS = 4;
-std::mutex mutex_shortest;
+mutex mutex_shortest;
 int **Dist;			// Dist[i][j] =  distance from  i to j
 
 // pthread_mutex_t queue = PTHREAD_MUTEX_INITIALIZER;
@@ -59,7 +59,7 @@ class Path
     assert(numVisited <= i && i < numCities);
     // In order to keep the path as a permutation of all cities
     // we "add" a city on the path by swapping 
-    std::swap(city[i], city[numVisited]);
+    swap(city[i], city[numVisited]);
  
     // visit city[numVisited]
     length += Dist[city[numVisited-1]][city[numVisited]];
@@ -69,8 +69,8 @@ class Path
   void Print()
   {
     for (int i = 0; i < numVisited; i++) 
-	    std::cout << ' ' << city[i];
-    std::cout << "; length = " << length << std::endl;
+	    cout << ' ' << city[i];
+    cout << "; length = " << length << endl;
   }
 };
 
@@ -110,7 +110,7 @@ Path *Queue::Get()
 void Fill_Dist(int numCities)
 {
   // create Distance Matrix, Fill with random distances, symmetrical.
-  std::cout << "Distance matrix:\n";
+  cout << "Distance matrix:\n";
   Dist = new int*[numCities];
   for (int i=0; i<numCities; i++) {
     Dist[i] = new int[numCities];
@@ -122,9 +122,9 @@ void Fill_Dist(int numCities)
 	      Dist[i][j] = Dist[j][i];
       else
 	      Dist[i][j] = rand()%1000; 
-      std::cout << Dist[i][j] << '\t';
+      cout << Dist[i][j] << '\t';
     }
-    std::cout << std::endl << std::endl;
+    cout << endl << endl;
   }
 }
 
@@ -163,7 +163,7 @@ void* tsp (void* arg)
 
 	      // update shortestPath, if p1 is better
 	      if (p1->length < shortestPath->length) {
-          std::lock_guard<std::mutex> guard(mutex_shortest);
+          lock_guard<mutex> guard(mutex_shortest);
           *shortestPath = *p1;
         }
 	      delete p1;
@@ -186,7 +186,7 @@ int main(int argc, char *argv[])
 {
   /*========= read args =========*/
   if (argc!=2) {
-    std::cout << "Usage: " << argv[0] << " num_cities\n";
+    cout << "Usage: " << argv[0] << " num_cities\n";
     exit(-1);
   }  
 
@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
   Fill_Dist(num_cities);			// initialize Distance matrix
 
   /*====== create threads ======*/
-  int num_threads = std::min(MAX_THREADS, num_cities - 1);
+  int num_threads = min(MAX_THREADS, num_cities - 1);
   pthread_t threads[num_threads];
 
 
@@ -208,12 +208,12 @@ int main(int argc, char *argv[])
   // Params params = {num_cities, &Q, &Shortest};
 
 
-  std::vector<Queue> queues(num_threads);
-  std::vector<Params> params(num_threads);
+  vector<Queue> queues(num_threads);
+  vector<Params> params(num_threads);
   Path shortest = Path(num_cities);
 
 
-  auto startTime = std::chrono::steady_clock::now();
+  auto startTime = chrono::steady_clock::now();
   
   // tsp(&params);
   for (int i = 0; i < num_threads; i++) {
@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
     
     int rc = pthread_create(&threads[i], NULL, tsp, (void *)&params[i]);
     if (rc) {
-      std::cout << "Error:unable to create thread," << rc << std::endl;
+      cout << "Error:unable to create thread," << rc << endl;
       exit(-1);
     } 
   }   
@@ -238,15 +238,15 @@ int main(int argc, char *argv[])
   }
   
   
-  auto endTime = std::chrono::steady_clock::now();
-  auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+  auto endTime = chrono::steady_clock::now();
+  auto ms = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
 
 
   /*====== print solution ======*/
-  std::cout << "Shortest path:";
+  cout << "Shortest path:";
   shortest.Print();
   
-  std::cout << "TSP parallel solution took " << ms.count() << " ms\n";
+  cout << "TSP parallel solution took " << ms.count() << " ms\n";
   return 0;
 }
 
