@@ -12,6 +12,7 @@
 #include <chrono>
 #include <pthread.h>
 #include <vector>
+#include <mutex>
 
 // using namespace std;
 
@@ -191,7 +192,7 @@ int main(int argc, char *argv[])
   Fill_Dist(num_cities);			// initialize Distance matrix
 
   /*====== create threads ======*/
-  int num_threads = min(MAX_THREADS, num_cities - 1);
+  int num_threads = std::min(MAX_THREADS, num_cities - 1);
   pthread_t threads[num_threads];
 
 
@@ -232,7 +233,7 @@ int main(int argc, char *argv[])
   
   
   auto endTime = std::chrono::steady_clock::now();
-  auto ms = std::chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
+  auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
 
 
   /*====== print solution ======*/
