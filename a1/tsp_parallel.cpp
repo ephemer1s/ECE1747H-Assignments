@@ -14,12 +14,10 @@
 #include <limits.h>
 #include <assert.h>
 #include <chrono>
-#include <thread>
 #include <mutex>
 #include <cstdlib>
 #include <pthread.h>
 #include <vector>
-#include <algorithm>
 // using namespace std;
 
 const int MAX_CITIES = 20;
@@ -164,10 +162,10 @@ void* tsp (void* arg)
 	      p1->length += Dist[p1->city[numCities-1]][0];
 
 	      // update shortestPath, if p1 is better
-	      if (p1->length < shortestPath->length) 
+	      if (p1->length < shortestPath->length) {
           std::lock_guard<std::mutex> guard(mutex_shortest);
           *shortestPath = *p1;
-	     
+        }
 	      delete p1;
       } 
       else 
