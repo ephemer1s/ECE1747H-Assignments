@@ -10,19 +10,12 @@
 #include <limits.h>
 #include <assert.h>
 #include <chrono>
-#include <pthread>
 
 
 const int MAXCITIES = 20;
-const int NUM_THREADS = 10;
+
 
 int **Dist;			// Dist[i][j] =  distance from  i to j
-
-pthread_mutex_t queue = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t best = PTHREAD_MUTEX_INITIALIZER;
-pthread_t tid[NUM_THREADS];   // thread IDs
-
-///////////////////////////////////////////////////////////////////////////
 
 class Path 
 {
@@ -67,6 +60,7 @@ class Path
   }
 };
 
+
 class Queue 
 {
   static const int MAXQSIZE = 100000;
@@ -80,46 +74,29 @@ class Queue
   int isEmpty() { return size==0; };
 };
 
-///////////////////////////////////////////////////////////////////////////
-
 void Queue::Put(Path *P) 
 { 
-  pthreads_mutex_lock(&queue);
   assert(size < MAXQSIZE); 
   path[size++] = P;
-  pthreads_mutex_unlock(&queue);
 }
 
 Path *Queue::Get()
 {
-  pthreads_mutex_lock(&queue);
-  while( (q is empty) and (not done) ) {
-		waiting++;
-		if( waiting == p ) {
-			done = true;
-			pthreads_cond_broadcast(&empty, &queue);
-		}
-		else {
-			pthreads_cond_wait(&empty, &queue);
-			waiting--;
-		}
-	}
-  if (isEmpty()) {
+  if (isEmpty())
     return NULL;
-  }
-  else {
-    // to decrease the size of the queue, move the last element
-    Path *p = path[0]; 
-    path[0] = path[--size];
-    return p;
-  }
+
+  // to decrease the size of the queue, move the last element
+  Path *p = path[0]; 
+  path[0] = path[--size];
+
+  return p;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 
+
 void Fill_Dist(int numCities)
 {
-  // create Distance Matrix, Fill with random distances, symmetrical.
   std::cout << "Distance matrix:\n";
   Dist = new int*[numCities];
   for (int i=0; i<numCities; i++) {
@@ -127,16 +104,18 @@ void Fill_Dist(int numCities)
     for (int j=0; j<numCities; j++) {
       // Not necessary, but let's make Dist simmetric:
       if (i==j) 
-	      Dist[i][j] = 0;
+	Dist[i][j] = 0;
       else if (j<i) 
-	      Dist[i][j] = Dist[j][i];
+	Dist[i][j] = Dist[j][i];
       else
-	      Dist[i][j] = rand()%1000; 
+	Dist[i][j] = rand()%1000; 
       std::cout << Dist[i][j] << '\t';
     }
     std::cout << std::endl << std::endl;
   }
 }
+
+
 
 struct Params
 {
@@ -195,20 +174,9 @@ void* tsp (void* arg)
   return NULL;
 }
 
-///////////////////////////////////////////////////////////////////////////
-
-void update_best(Path best) {
-	pthreads_mutex_lock(&best);
-	// do sth
-	pthreads_mutex_unlock(&best);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char *argv[])
 {
-  /*========= read args =========*/
   if (argc!=2) {
     std::cout << "Usage: " << argv[0] << " num_cities\n";
     exit(-1);
@@ -233,15 +201,12 @@ int main(int argc, char *argv[])
   auto endTime = std::chrono::steady_clock::now();
   auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
 
-
-  /*====== print solution ======*/
   std::cout << "Shortest path:";
   Shortest.Print();
   
+
   std::cout << "TSP solution took " << ms.count() << " ms\n";
   return 0;
 }
 
 
-// note to self: 
-// to compile: https://www.geeksforgeeks.org/compiling-with-g-plus-plus/
