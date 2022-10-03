@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
-// Traveling Salesman Problem.
-// Note: this is a C++ program: compile it with g++
-//
+// Traveling Salesman Problem
+// Version: Multiple Partial Paths
+// Note: compile on ug-lab machine:
+// g++ -pthread -o multi.exe tsp_parallel_m.cpp
 // Starting city is assumed to be city 0.
 //////////////////////////////////////////////////////////////////////////
 
-// to compile, run:
-// g++ -c tsp_parallel.cpp
-// g++ -pthread -o parallel.exe tsp_parallel.cpp
+
+
 
 #include <iostream>
 #include <stdlib.h>
