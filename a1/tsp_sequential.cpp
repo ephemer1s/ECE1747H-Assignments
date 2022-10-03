@@ -1,7 +1,8 @@
 //////////////////////////////////////////////////////////////////////////
 // Traveling Salesman Problem.
-// Note: this is a C++ program: compile it with g++
-//
+// Version: Sequential Solution
+// Note: compile on ug-lab machine:
+// g++ -pthread -o sequential.exe tsp_sequential.cpp
 // Starting city is assumed to be city 0.
 //////////////////////////////////////////////////////////////////////////
 
