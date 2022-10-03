@@ -18,9 +18,9 @@
 #include <vector>
 #include <algorithm>
 
-const int MAXCITIES = 20;
+const int MAX_CITIES = 20;
 const int MAX_THREADS = 4;
-std::mutex g_shortestPathMutex;
+std::mutex mutex_shortest;
 
 int **Dist;     // Dist[i][j] =  distance from  i to j
 
@@ -29,27 +29,27 @@ class Path
  public:
   int numVisited; // Number of cities in the partial path
   int length;     // Current length of partial path
-  int city[MAXCITIES];
-  int numCities;
+  int city[MAX_CITIES];
+  int num_cities;
 
   // Array city[] is a permutation of all cities.
   // city[0]..city[numVisited-1] is the current partial path;
-  // city[numVisited]..city[numCities-1] are the cities not yet in the path
+  // city[numVisited]..city[num_cities-1] are the cities not yet in the path
 
-  Path(int n): length(0), numVisited(1), numCities(n)			// Initialize a Path with city 0 as visited
+  Path(int n): length(0), numVisited(1), num_cities(n)			// Initialize a Path with city 0 as visited
   {
-    for (int i = 0; i < numCities; i++)
+    for (int i = 0; i < num_cities; i++)
       city[i] = i;
   }
-  Path (const Path& other) : numVisited(other.numVisited), length(other.length), numCities(other.numCities)
+  Path (const Path& other) : numVisited(other.numVisited), length(other.length), num_cities(other.num_cities)
   {
-    for (int i = 0; i < numCities; i++)
+    for (int i = 0; i < num_cities; i++)
       city[i] = other.city[i];
   }
 
   void AddCity (int i)		// Extends path by adding the ith city not yet visited.
   {
-    assert(numVisited <= i && i < numCities);
+    assert(numVisited <= i && i < num_cities);
     // In order to keep the path as a permutation of all cities
     // we "add" a city on the path by swapping
     std::swap(city[i], city[numVisited]);
@@ -102,13 +102,13 @@ Path *Queue::Get()
 ///////////////////////////////////////////////////////////////////////////
 
 
-void Fill_Dist(int numCities)
+void Fill_Dist(int num_cities)
 {
   std::cout << "Distance matrix:\n";
-  Dist = new int*[numCities];
-  for (int i=0; i<numCities; i++) {
-    Dist[i] = new int[numCities];
-    for (int j=0; j<numCities; j++) {
+  Dist = new int*[num_cities];
+  for (int i=0; i<num_cities; i++) {
+    Dist[i] = new int[num_cities];
+    for (int j=0; j<num_cities; j++) {
       // Not necessary, but let's make Dist simmetric:
       if (i==j)
         Dist[i][j] = 0;
@@ -126,7 +126,7 @@ void Fill_Dist(int numCities)
 
 struct Params
 {
-  int numCities;
+  int num_cities;
   Queue *Q;
   Path *shortestPath;
 };
@@ -135,7 +135,7 @@ struct Params
 void* tsp (void* arg)
 {
   Params *params = (Params *)arg;
-  int numCities = params->numCities;
+  int num_cities = params->num_cities;
   Queue *Q = params->Q;
   Path *shortestPath = params->shortestPath;
 
@@ -147,20 +147,20 @@ void* tsp (void* arg)
     Path *p = Q->Get();
 
     // For each city not yet visited, extend the path:
-    for (int i = p->numVisited; i < numCities; i++)
+    for (int i = p->numVisited; i < num_cities; i++)
     {
       Path *p1 = new Path(*p);	// initially p1 is a clone of p
       p1->AddCity(i);
 
       // decide what to do with new path
-      if (p1->numVisited == numCities) // If we visited them all
+      if (p1->numVisited == num_cities) // If we visited them all
       {
         // Add last hop to return to origin:
-        p1->length += Dist[p1->city[numCities-1]][0];
+        p1->length += Dist[p1->city[num_cities-1]][0];
 
         // update shortestPath, if p1 is better
         if (p1->length < shortestPath->length) {
-          std::lock_guard<std::mutex> guard(g_shortestPathMutex);
+          std::lock_guard<std::mutex> guard(mutex_shortest);
           *shortestPath = *p1;
         }
 
@@ -192,31 +192,31 @@ int main(int argc, char *argv[])
     exit(-1);
   }
 
-  int NumCities = atoi(argv[1]);
-  assert(NumCities <= MAXCITIES);
+  int num_cities = atoi(argv[1]);
+  assert(num_cities <= MAX_CITIES);
 
-  Fill_Dist(NumCities);			// initialize Distance matrix
+  Fill_Dist(num_cities);			// initialize Distance matrix
 
   // thread details
-  int numberOfThreads = std::min(MAX_THREADS, NumCities - 1);
-  pthread_t threads[numberOfThreads];
-  Path shortestPath = Path(NumCities);
-  std::vector<Queue> queues(numberOfThreads);
-  std::vector<Params> params(numberOfThreads);
+  int num_threads = std::min(MAX_THREADS, num_cities - 1);
+  pthread_t threads[num_threads];
+  Path shortestPath = Path(num_cities);
+  std::vector<Queue> queues(num_threads);
+  std::vector<Params> params(num_threads);
 
   auto startTime = std::chrono::steady_clock::now();
 
-  for (int i = 0; i < numberOfThreads; i++) {
-    int loopCount = ((NumCities - 1) / MAX_THREADS)  + ((((NumCities - 1) % MAX_THREADS) > i) ? 1 : 0);
-    for (int j = 0; j < loopCount; j++) {
-      Path *P = new Path(NumCities);
+  for (int i = 0; i < num_threads; i++) {
+    int loop_cnt = ((num_cities - 1) / MAX_THREADS)  + ((((num_cities - 1) % MAX_THREADS) > i) ? 1 : 0);
+    for (int j = 0; j < loop_cnt; j++) {
+      Path *P = new Path(num_cities);
       P->AddCity( (i+1) + ((j*MAX_THREADS)) ); // e.g. 0->1, 0->2, etc... 0->9, 0->10, etc... 0->17, 0->18
       queues[i].Put(P);
     }
 
     shortestPath.length = INT_MAX;
 
-    params[i] = {NumCities, &queues[i], &shortestPath};
+    params[i] = {num_cities, &queues[i], &shortestPath};
 
     int rc = pthread_create(&threads[i], NULL, tsp, (void *)&params[i]);
     if (rc) {
@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  for (int i = 0; i < numberOfThreads; i++) {
+  for (int i = 0; i < num_threads; i++) {
     pthread_join(threads[i], NULL);
   }
 
