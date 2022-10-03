@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
   Shortest.Print();
   
 
-  std::cout << "TSP solution took " << ms.count() << " ms\n";
+  std::cout << "TSP sequential solution took " << ms.count() << " ms\n";
   return 0;
 }
 
