@@ -184,7 +184,7 @@ void* tsp (void* arg)
 
 int main(int argc, char *argv[])
 {
-  /*========= read args =========*/
+  /*=========================== read args ===========================*/
   if (argc!=2) {
     cout << "Usage: " << argv[0] << " num_cities\n";
     exit(-1);
@@ -195,27 +195,19 @@ int main(int argc, char *argv[])
   
   Fill_Dist(num_cities);			// initialize Distance matrix
 
-  /*====== create threads ======*/
+  /*===================== create thread containers ===================*/
   int num_threads = min(MAX_THREADS, num_cities - 1);
   pthread_t threads[num_threads];
 
-
-  // Path *P = new Path(num_cities);
-  // Queue Q;
-  // Q.Put(P);			// initialize Q with one zero-length path
-  // Path Shortest(num_cities);
-  // Shortest.length = INT_MAX;    // The initial Shortest path must be bad
-  // Params params = {num_cities, &Q, &Shortest};
-
-
-  vector<Queue> queues(num_threads);
-  vector<Params> params(num_threads);
-  Path shortest = Path(num_cities);
+  vector<Queue> queues(num_threads);      // Queue Q;
+  vector<Params> params(num_threads);     // Params params = {num_cities, &Q, &Shortest};
+  Path shortest(num_cities);
 
 
   auto startTime = chrono::steady_clock::now();
   
-  // tsp(&params);
+
+  /*======================== allocate threads ==-=====================*/
   for (int i = 0; i < num_threads; i++) {
     int loop_cnt = (num_cities - 1) / MAX_THREADS + ((((num_cities - 1) % MAX_THREADS) > i) ? 1 : 0);
     for (int j = 0; j < loop_cnt; j++) { 
@@ -226,8 +218,10 @@ int main(int argc, char *argv[])
 
     shortest.length = INT_MAX;
     params[i] = {num_cities, &queues[i], &shortest};
-    
-    int rc = pthread_create(&threads[i], NULL, tsp, (void *)&params[i]);
+
+
+    /*====================== solve TSP in threads =====================*/
+    int rc = pthread_create(&threads[i], NULL, tsp, (void *)&params[i]);  // tsp(&params);
     if (rc) {
       cout << "Error:unable to create thread," << rc << endl;
       exit(-1);
@@ -242,7 +236,7 @@ int main(int argc, char *argv[])
   auto ms = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
 
 
-  /*====== print solution ======*/
+  /*=========================== print solution ========================*/
   cout << "Shortest path:";
   shortest.Print();
   
