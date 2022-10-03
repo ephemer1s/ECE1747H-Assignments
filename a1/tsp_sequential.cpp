@@ -182,19 +182,19 @@ int main(int argc, char *argv[])
     exit(-1);
   }  
 
-  int NumCities = atoi(argv[1]);
-  assert(NumCities <= MAX_CITIES);
+  int num_cities = atoi(argv[1]);
+  assert(num_cities <= MAX_CITIES);
   
-  Fill_Dist(NumCities);			// initialize Distance matrix
+  Fill_Dist(num_cities);			// initialize Distance matrix
 
-  Path *P = new Path(NumCities);
+  Path *P = new Path(num_cities);
   Queue Q;
   Q.Put(P);			// initialize Q with one zero-length path
 
-  Path Shortest(NumCities);
+  Path Shortest(num_cities);
   Shortest.length = INT_MAX;    // The initial Shortest path must be bad
 
-  Params params = {NumCities, &Q, &Shortest};
+  Params params = {num_cities, &Q, &Shortest};
 
   auto startTime = std::chrono::steady_clock::now();
   tsp(&params);
