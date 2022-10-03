@@ -5,6 +5,10 @@
 // Starting city is assumed to be city 0.
 //////////////////////////////////////////////////////////////////////////
 
+// to compile, run:
+// g++ -c tsp_parallel.cpp
+// g++ -pthread -o parallel.exe tsp_parallel.cpp
+
 #include <iostream>
 #include <stdlib.h>
 #include <limits.h>
@@ -13,11 +17,13 @@
 #include <pthread.h>
 #include <vector>
 #include <mutex>
-
+#include <thread>
+#include <cstdlib>
+#include <algorithm>
 // using namespace std;
 
 const int MAX_CITIES = 20;
-const int MAX_THREADS = 20;
+const int MAX_THREADS = 8;
 std::mutex mutex_shortest;
 int **Dist;			// Dist[i][j] =  distance from  i to j
 
@@ -203,24 +209,26 @@ int main(int argc, char *argv[])
   // Shortest.length = INT_MAX;    // The initial Shortest path must be bad
   // Params params = {num_cities, &Q, &Shortest};
 
-  Path shortest = Path(num_cities);
 
   std::vector<Queue> queues(num_threads);
   std::vector<Params> params(num_threads);
+  Path shortest = Path(num_cities);
 
 
   auto startTime = std::chrono::steady_clock::now();
   
   // tsp(&params);
   for (int i = 0; i < num_threads; i++) {
-    int loop_cnt = (num_cities - 1) / MAX_THREADS + ((num_cities - 1) % MAX_THREADS) > i ? 1 : 0;
+    int loop_cnt = (num_cities - 1) / MAX_THREADS + ((((num_cities - 1) % MAX_THREADS) > i) ? 1 : 0);
     for (int j = 0; j < loop_cnt; j++) { 
       Path *P = new Path(num_cities);
       P -> AddCity(i + j * MAX_THREADS + 1);
       queues[i].Put(P);
     }
+
     shortest.length = INT_MAX;
     params[i] = {num_cities, &queues[i], &shortest};
+    
     int rc = pthread_create(&threads[i], NULL, tsp, (void *)&params[i]);
     if (rc) {
       std::cout << "Error:unable to create thread," << rc << std::endl;
