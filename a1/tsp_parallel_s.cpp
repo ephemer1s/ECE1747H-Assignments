@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
     P -> AddCity(i);
     queues[i].Put(P);
     shortest.length = INT_MAX;
-    params[i] = {num_cities, &queues[i], &shortest}
+    params[i] = {num_cities, &queues[i], &shortest};
 
     /*====================== solve TSP in threads =====================*/
     int response = pthread_create(&threads[i], NULL, tsp, (void *)&params[i]);  // tsp(&params);
