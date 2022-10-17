@@ -60,15 +60,23 @@ void parallelSolution2(int *A){
     }
 }
 
+
+// We tried the third approach from the slides, but we were not able to implement
+// recursion in the innermost loop, which caused failure.
+/*
 void parallelSolution3(int *A){
     #pragma omp parallel for
-    for (int i = 0; i < ITER; i++) {
+    for (int i = 1; i < ITER; i++) {
         int k = i * STRIDE;
         for (int j = 0; j < STRIDE; j++) {
             A[k + j] = transform(A[j]);
+            for(int l = 1; l < i; l++){
+                A[k + j] = transform(A[k + j]);
+            }
         }
     }
 }
+*/
 
 
 int main(int argc, char *argv[])
